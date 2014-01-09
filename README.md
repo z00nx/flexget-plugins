@@ -1,0 +1,2 @@
+flexget-plugins
+===============
