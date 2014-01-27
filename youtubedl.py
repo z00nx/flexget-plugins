@@ -72,7 +72,7 @@ class PluginYoutubeDL(object):
         log.verbose(params)
         for entry in task.accepted:
             log.verbose([entry['url']])
-            if task.option.test:
+            if task.options.test:
                 log.info('Would download %s and save as %s' % (entry['url'], params['outtmpl']))
             else:
                 try:
