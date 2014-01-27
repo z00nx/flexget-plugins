@@ -3,6 +3,7 @@ import logging
 
 from flexget import plugin
 from flexget.event import event
+from flexget.utils.template import RenderError
 
 
 log = logging.getLogger('youtubedl')
@@ -13,9 +14,27 @@ class PluginYoutubeDL(object):
     Download videos using YoutubeDL
     (https://github.com/rg3/youtube-dl)
 
-    Example (complete task):
-    """
+    Example::
 
+      youtubedl:
+        username: my_username
+        password: my_password
+        videopassword: my_videopassword
+        format: best
+        template: {{ title }}.%(ext)s
+        path: ~/downloads/
+
+    All parameters::
+
+      youtubedl:
+        username: ...
+        password: ...
+        videopassword: ...
+        format: ...
+        template: ...
+        path: ...
+    """
+    #TODO: add more options which will be passed to youtube-dl
     schema = {
         'type': 'object',
         'properties': {
@@ -25,7 +44,6 @@ class PluginYoutubeDL(object):
             'template': {'type': 'string', 'default': '%(title)s-%(id)s.%(ext)s'},
             'videopassword': {'type': 'string'},
             'path': {'type': 'string', 'format': 'path'},
-            'title': {'type': 'string'},
         },
         'required': ['path']
     }
@@ -55,9 +73,14 @@ class PluginYoutubeDL(object):
             def process_info(self, info_dict):
                 self.processed_info_dicts.append(info_dict)
                 return super(YoutubeDL, self).process_info(info_dict)
-        #TODO: evalutate jinja strings
+        try:
+            #TODO: find a better way to render the path
+            outtmpl = task.accepted[0].render(config['path'] + '/' + config['template'])
+            log.verbose('Setting output file to %s' % outtmpl)
+        except RenderError as e:
+            log.error('Error setting output file: %s' % e)
         params = {'quiet': True,
-                  'outtmpl': '%s/%s' % (config['path'], config['template'])}
+                  'outtmpl': outtmpl}
         if 'username' in config and 'password' in config:
             params.update({'username': config['username'],
                            'password': config['password']})
@@ -69,12 +92,11 @@ class PluginYoutubeDL(object):
             params.update({'title': config['title']})
         ydl = YoutubeDL(params)
         ydl.add_default_info_extractors()
-        log.verbose(params)
         for entry in task.accepted:
-            log.verbose([entry['url']])
             if task.options.test:
-                log.info('Would download %s and save as %s' % (entry['url'], params['outtmpl']))
+                log.info('Would download %s' % entry['title'])
             else:
+                log.info('Downloading %s' % entry['title'])
                 try:
                     ydl.download([entry['url']])
                 except ExtractorError as e:
