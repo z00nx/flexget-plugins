@@ -67,35 +67,31 @@ class PluginYoutubeDL(object):
                 super(YoutubeDL, self).__init__(*args, **kwargs)
 
             def report_warning(self, message):
-                # Don't accept warnings during tests
                 raise ExtractorError(message)
 
             def process_info(self, info_dict):
                 self.processed_info_dicts.append(info_dict)
                 return super(YoutubeDL, self).process_info(info_dict)
-        try:
-            #TODO: find a better way to render the path
-            outtmpl = task.accepted[0].render(config['path'] + '/' + config['template'])
-            log.verbose('Setting output file to %s' % outtmpl)
-        except RenderError as e:
-            log.error('Error setting output file: %s' % e)
-        params = {'quiet': True,
-                  'outtmpl': outtmpl}
-        if 'username' in config and 'password' in config:
-            params.update({'username': config['username'],
-                           'password': config['password']})
-        elif 'username' in config or 'password' in config:
-            log.error('Both username and password is required')
-        if 'videopassword' in config:
-            params.update({'videopassword': config['videopassword']})
-        if 'title' in config:
-            params.update({'title': config['title']})
-        ydl = YoutubeDL(params)
-        ydl.add_default_info_extractors()
         for entry in task.accepted:
             if task.options.test:
                 log.info('Would download %s' % entry['title'])
             else:
+                try:
+                    #TODO: implement pathscrub
+                    outtmpl = entry.render(config['path'] + '/' + config['template'])
+                except RenderError as e:
+                    log.error('Error setting output file: %s' % e)
+                params = {'quiet': True, 'outtmpl': outtmpl}
+                if 'username' in config and 'password' in config:
+                    params.update({'username': config['username'], 'password': config['password']})
+                elif 'username' in config or 'password' in config:
+                    log.error('Both username and password is required')
+                if 'videopassword' in config:
+                    params.update({'videopassword': config['videopassword']})
+                if 'title' in config:
+                    params.update({'title': config['title']})
+                ydl = YoutubeDL(params)
+                ydl.add_default_info_extractors()
                 log.info('Downloading %s' % entry['title'])
                 try:
                     ydl.download([entry['url']])
