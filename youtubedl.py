@@ -32,7 +32,7 @@ class PluginYoutubeDL(object):
 
     def on_task_start(self, task, config):
         try:
-            import youtube_dl # NOQA
+            import youtube_dl  # NOQA
         except ImportError as e:
             log.debug('Error importing YoutubeDL: %s' % e)
             raise plugin.DependencyError('youtubedl', 'youtubedl',
@@ -55,6 +55,7 @@ class PluginYoutubeDL(object):
             def process_info(self, info_dict):
                 self.processed_info_dicts.append(info_dict)
                 return super(YoutubeDL, self).process_info(info_dict)
+        #TODO: evalutate jinja strings
         params = {'quiet': True,
                   'outtmpl': '%s/%s' % (config['path'], config['template'])}
         if 'username' in config and 'password' in config:
@@ -71,12 +72,15 @@ class PluginYoutubeDL(object):
         log.verbose(params)
         for entry in task.accepted:
             log.verbose([entry['url']])
-            try:
-                ydl.download([entry['url']])
-            except ExtractorError as e:
-                log.error('Youtube-DL was unable to download the video. Error message %s' % e.message)
-            except Exception as e:
-                log.error('Youtube-DL failed. Error message %s' % e.message)
+            if task.option.test:
+                log.info('Would download %s and save as %s' % (entry['url'], params['outtmpl']))
+            else:
+                try:
+                    ydl.download([entry['url']])
+                except ExtractorError as e:
+                    log.error('Youtube-DL was unable to download the video. Error message %s' % e.message)
+                except Exception as e:
+                    log.error('Youtube-DL failed. Error message %s' % e.message)
 
 
 @event('plugin.register')
