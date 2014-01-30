@@ -35,6 +35,7 @@ class PluginYoutubeDL(object):
         path: ...
     """
     #TODO: add more options which will be passed to youtube-dl
+    #FIXME: youtube-dl fails when falling back to generic download method
     schema = {
         'type': 'object',
         'properties': {
