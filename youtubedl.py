@@ -4,6 +4,7 @@ import logging
 from flexget import plugin
 from flexget.event import event
 from flexget.utils.template import RenderError
+from flexget.utils.pathscrub import pathscrub
 
 
 log = logging.getLogger('youtubedl')
@@ -78,8 +79,7 @@ class PluginYoutubeDL(object):
                 log.info('Would download %s' % entry['title'])
             else:
                 try:
-                    #TODO: implement pathscrub
-                    outtmpl = entry.render(config['path'] + '/' + config['template'])
+                    outtmpl = pathscrub(entry.render(config['path'] + '/' + config['template']), filename=True)
                 except RenderError as e:
                     log.error('Error setting output file: %s' % e)
                 params = {'quiet': True, 'outtmpl': outtmpl}
