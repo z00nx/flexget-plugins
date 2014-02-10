@@ -79,9 +79,12 @@ class PluginYoutubeDL(object):
                 log.info('Would download %s' % entry['title'])
             else:
                 try:
-                    outtmpl = pathscrub(entry.render(config['path'] + '/' + config['template']), filename=True)
+                    #outtmpl = pathscrub(entry.render(config['path'] + '/' + config['template']), filename=True)
+                    outtmpl = entry.render(config['path']) + '/' + entry.render(pathscrub(config['template'], filename=True)) + '.%(ext)s'
+                    log.info("Output file: %s" % outtmpl)
                 except RenderError as e:
                     log.error('Error setting output file: %s' % e)
+                    entry.fail('Error setting output file: %s' % e)
                 params = {'quiet': True, 'outtmpl': outtmpl}
                 if 'username' in config and 'password' in config:
                     params.update({'username': config['username'], 'password': config['password']})
@@ -98,8 +101,10 @@ class PluginYoutubeDL(object):
                     ydl.download([entry['url']])
                 except ExtractorError as e:
                     log.error('Youtube-DL was unable to download the video. Error message %s' % e.message)
+                    entry.fail('Youtube-DL was unable to download the video. Error message %s' % e.message)
                 except Exception as e:
                     log.error('Youtube-DL failed. Error message %s' % e.message)
+                    entry.fail('Youtube-DL failed. Error message %s' % e.message)
 
 
 @event('plugin.register')
