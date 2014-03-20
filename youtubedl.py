@@ -79,8 +79,7 @@ class PluginYoutubeDL(object):
                 log.info('Would download %s' % entry['title'])
             else:
                 try:
-                    #outtmpl = pathscrub(entry.render(config['path'] + '/' + config['template']), filename=True)
-                    outtmpl = entry.render(config['path']) + '/' + entry.render(pathscrub(config['template'], filename=True)) + '.%(ext)s'
+                    outtmpl = entry.render(config['path']) + '/' + pathscrub(entry.render(config['template']) + '.%(ext)s', filename=True)
                     log.info("Output file: %s" % outtmpl)
                 except RenderError as e:
                     log.error('Error setting output file: %s' % e)
